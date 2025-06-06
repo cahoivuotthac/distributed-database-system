@@ -1,0 +1,17 @@
+connections:
+  oracle_db:
+    conn_id: oracle_BTL2
+    conn_type: oracle
+    host: 26.93.36.133
+    schema: orcl
+    login: BTL1
+    password: password
+    port: 1521
+  
+  cassandra_db:
+    conn_id: cassandra_BTL2 
+    host: cassandra
+    port: 9042
+    schema: BTL2_data
+    login: 
+    password: 
