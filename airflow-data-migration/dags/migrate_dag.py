@@ -34,6 +34,8 @@ dag = DAG(
 	description='ETL pipeline from Oracle to Cassandra',
 	schedule_interval=None, 
 	catchup=False,
+    max_active_runs=1, # prevent multiple instances 
+    concurrency=6, # allow 6 tasks run in parallel
 	tags=['migration', 'oracle', 'cassandra']
 )
 

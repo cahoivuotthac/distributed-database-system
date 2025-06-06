@@ -24,13 +24,14 @@ def connect_to_cluster(cluster_ip, keyspace_name):
 			connect_timeout=10,  # seconds
 			control_connection_timeout=10  # seconds
 		)
-
-		session1 = cluster1.connect()
-		print(f"Connected to cluster_1 having IP address: {cluster_ip} successfully!")
 		
-		print(f"\nAttempting to connect to {keyspace_name.upper()} keyspace...")
+		session1 = cluster1.connect()
+		if cluster_ip != '127.0.0.1':
+			print(f"Kết nối tới máy Công Phan có địa chỉ IP: {cluster_ip} thành công!")
+
 		session1 = cluster1.connect(keyspace_name)
-		print(f"Connected to {keyspace_name.upper()} successfully!")
+		if cluster_ip != '127.0.0.1':
+			print(f"Kết nối vào {keyspace_name.upper()} thành công!")
 
 		return cluster1, session1
 	except Exception as e: 

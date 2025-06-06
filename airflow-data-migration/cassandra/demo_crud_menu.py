@@ -1,203 +1,274 @@
-from cassandra.cluster import Cluster
-from cassandra.auth import PlainTextAuthProvider
+import os
 import sys
-from datetime import datetime, date
+from connect_2_clusters import connect_to_cluster
+from crud import crud_ops, select_ops, select_union_ops
 
-class CassandraCRUD:
-    def __init__(self):
-        self.cluster = None
-        self.session = None
-        self.connect()
-    
-    def connect(self):
-        """Connect to Cassandra cluster"""
-        try:
-            self.cluster = Cluster(['127.0.0.1'])
-            self.session = self.cluster.connect()
-            self.session.execute("USE BTL2_data")
-            print("✅ Connected to Cassandra successfully!")
-        except Exception as e:
-            print(f"❌ Error connecting to Cassandra: {e}")
-            sys.exit(1)
-    
-    def disconnect(self):
-        """Disconnect from Cassandra"""
-        if self.cluster:
-            self.cluster.shutdown()
-            print("🔌 Disconnected from Cassandra")
-    
-    def display_main_menu(self):
-        """Display main CRUD operations menu"""
-        print("\n" + "="*50)
-        print("🗄️  CASSANDRA CRUD OPERATIONS MENU")
-        print("="*50)
-        print("1. Chi tiết hóa đơn theo mã khách hàng")
-        print("2. Doanh thu mỗi ngày theo mã chi nhánh")
-        print("3. Kho sản phẩm theo mã chi nhánh")
-        print("4. Số lượng khách hàng mỗi ngày theo mã chi nhánh")
-        print("5. Doanh thu sản phẩm theo quý chi nhánh")
-        print("6. Doanh thu tháng nhân viên chi nhánh")
-        print("0. Exit")
-        print("="*50)
-    
-    def display_crud_menu(self, table_name):
-        """Display CRUD operations for a specific table"""
-        print(f"\nCRUD Operations for {table_name}")
-        print("-"*40)
-        print("1. CREATE (Insert new record)")
-        print("2. READ (View records)")
-        print("3. UPDATE (Modify record)")
-        print("4. DELETE (Remove record)")
-        print("0. Back to main menu")
-        print("-"*40)
-    
-    def insert_chi_tiet_hoa_don(self):
-        """Insert record into chi_tiet_hoa_don_theo_ma_kh table"""
-        print("\n➕ Insert new Chi tiết hóa đơn:")
-        try:
-            ma_khach_hang = int(input("Mã khách hàng: "))
-            ma_hoa_don = int(input("Mã hóa đơn: "))
-            ma_san_pham = input("Mã sản phẩm: ")
-            so_luong = int(input("Số lượng: "))
-            thanh_tien = int(input("Thành tiền: "))
-            tong_tien = int(input("Tổng tiền: "))
-            ngay_tao = input("Ngày tạo (YYYY-MM-DD HH:MM:SS): ")
-            phuong_thuc_thanh_toan = input("Phương thức thanh toán: ")
-            ma_nhan_vien = int(input("Mã nhân viên: "))
-            
-            query = """
-            INSERT INTO chi_tiet_hoa_don_theo_ma_kh 
-            (ma_khach_hang, ma_hoa_don, ma_san_pham, so_luong, thanh_tien, 
-             tong_tien, ngay_tao, phuong_thuc_thanh_toan, ma_nhan_vien)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """
-            self.session.execute(query, (ma_khach_hang, ma_hoa_don, ma_san_pham, 
-                                       so_luong, thanh_tien, tong_tien, ngay_tao, 
-                                       phuong_thuc_thanh_toan, ma_nhan_vien))
-            print("✅ Record inserted successfully!")
-        except Exception as e:
-            print(f"❌ Error inserting record: {e}")
-    
-    def insert_kho_sp(self):
-        """Insert record into kho_sp_theo_ma_cn table"""
-        print("\n➕ Insert new Kho sản phẩm:")
-        try:
-            ma_chi_nhanh = int(input("Mã chi nhánh: "))
-            ma_san_pham = input("Mã sản phẩm: ")
-            ten_san_pham = input("Tên sản phẩm: ")
-            tinh_trang = input("Tình trạng: ")
-            tong_so_luong_danh_gia = int(input("Tổng số lượng đánh giá: "))
-            tong_so_luong_da_ban = int(input("Tổng số lượng đã bán: "))
-            tong_so_luong_ton_kho = int(input("Tổng số lượng tồn kho: "))
-            
-            query = """
-            INSERT INTO kho_sp_theo_ma_cn 
-            (ma_chi_nhanh, ma_san_pham, ten_san_pham, tinh_trang, 
-             tong_so_luong_danh_gia, tong_so_luong_da_ban, tong_so_luong_ton_kho)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-            """
-            self.session.execute(query, (ma_chi_nhanh, ma_san_pham, ten_san_pham, 
-                                       tinh_trang, tong_so_luong_danh_gia, 
-                                       tong_so_luong_da_ban, tong_so_luong_ton_kho))
-            print("✅ Record inserted successfully!")
-        except Exception as e:
-            print(f"❌ Error inserting record: {e}")
-    
-    def read_records(self, table_name):
-        """Read and display records from a table"""
-        print(f"\n📖 Reading records from {table_name}:")
-        try:
-            query = f"SELECT * FROM {table_name} LIMIT 10"
-            rows = self.session.execute(query)
-            
-            if not rows:
-                print("No records found.")
-                return
-            
-            print("-" * 80)
-            for row in rows:
-                print(row)
-            print("-" * 80)
-            print(f"Displayed first 10 records from {table_name}")
-        except Exception as e:
-            print(f"Error reading records: {e}")
-    
-    def delete_record(self, table_name):
-        """Delete record from a table"""
-        print(f"\nDelete record from {table_name}:")
-        print("Note: You need to provide primary key values")
-        
-        if table_name == "kho_sp_theo_ma_cn":
-            try:
-                ma_chi_nhanh = int(input("Mã chi nhánh: "))
-                ma_san_pham = input("Mã sản phẩm: ")
-                tong_so_luong_ton_kho = int(input("Tổng số lượng tồn kho: "))
-                
-                query = """
-                DELETE FROM kho_sp_theo_ma_cn 
-                WHERE ma_chi_nhanh = ? AND ma_san_pham = ? AND tong_so_luong_ton_kho = ?
-                """
-                self.session.execute(query, (ma_chi_nhanh, ma_san_pham, tong_so_luong_ton_kho))
-                print("✅ Record deleted successfully!")
-            except Exception as e:
-                print(f"❌ Error deleting record: {e}")
-        else:
-            print("❌ Delete operation not implemented for this table yet.")
-    
-    def run(self):
-        """Main program loop"""
-        tables = {
-            1: "chi_tiet_hoa_don_theo_ma_kh",
-            2: "doanh_thu_moi_ngay_theo_ma_cn",
-            3: "kho_sp_theo_ma_cn",
-            4: "sl_khach_hang_moi_ngay_theo_ma_cn",
-            5: "doanh_thu_sp_quy_cn",
-            6: "doanh_thu_thang_nv_cn"
-        }
-        
-        while True:
-            self.display_main_menu()
-            
-            try:
-                choice = int(input("\nChoose (0-6): "))
-                
-                if choice == 0:
-                    print("👋 Goodbye!")
-                    break
-                elif choice in tables:
-                    table_name = tables[choice]
-                    
-                    while True:
-                        self.display_crud_menu(table_name)
-                        crud_choice = int(input("\n🎯 Choose operation (0-4): "))
-                        
-                        if crud_choice == 0:
-                            break
-                        elif crud_choice == 1:  # CREATE
-                            if choice == 1:
-                                self.insert_chi_tiet_hoa_don()
-                            elif choice == 3:
-                                self.insert_kho_sp()
-                            else:
-                                print("❌ Insert operation not implemented for this table yet.")
-                        elif crud_choice == 2:  # READ
-                            self.read_records(table_name)
-                        elif crud_choice == 3:  # UPDATE
-                            print("❌ Update operation not implemented yet.")
-                        elif crud_choice == 4:  # DELETE
-                            self.delete_record(table_name)
-                        else:
-                            print("❌ Invalid choice! Please choose 0-4.")
-                else:
-                    print("❌ Invalid choice! Please choose 0-6.")
-            except ValueError:
-                print("❌ Invalid input! Please enter a number.")
-            except KeyboardInterrupt:
-                print("\n👋 Program interrupted. Goodbye!")
-                break
-        
-        self.disconnect()
+sys.path.append('/opt/airflow/scripts')
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'scripts'))
+
+cluster_ip = '26.103.246.194'
+keyspace_name = 'btl2_data'
+
+def display_menu():
+	"""Hiển thị menu các thao tác CRUD"""
+	print("\n" + "="*70)
+	print("         MENU CÁC THAO TÁC CRUD TRÊN 2 CASSANDRA CLUSTER")
+	print("="*70)
+	# print("1. Insert dữ liệu vào Máy 1 (Chi nhánh 1)")
+	# print("2. Update với dòng dữ liệu chỉ thuộc Máy 1 (Chi nhánh 1)")
+	# print("3. Xoá với dòng dữ liệu chỉ thuộc Máy 1 (Chi nhánh 1)")
+	print("4. Truy vấn theo Partition Key")
+	print("5. Truy vấn theo Partition + Clustering Key")
+	print("6. Truy vấn theo partition key với range trên clustering key")
+	print("7. Truy vấn với ALLOW FILTERING")
+	print("8. Truy vấn với Secondary Index")
+	print("0. Thoát")
+	print("="*70)
+
+def get_user_choice():
+	"""Lấy và kiểm tra lựa chọn của người dùng"""
+	while True:
+		try:
+			choice = int(input("Nhập lựa chọn của bạn (0-9): "))
+			if 0 <= choice <= 9:
+				return choice
+			else:
+				print("Lựa chọn không hợp lệ. Vui lòng nhập số từ 0-9.")
+		except ValueError:
+			print("Dữ liệu nhập không hợp lệ. Vui lòng nhập một số hợp lệ.")
+
+def operation_1_insert(cluster_sessions):
+	"""Thao tác 1: Thêm dữ liệu"""
+	print("\n--- THAO TÁC THÊM DỮ LIỆU ---")
+	insert_query = f"""
+	INSERT INTO doanh_thu_moi_ngay_theo_ma_cn (
+		ma_chi_nhanh, 
+		ngay,
+		tong_tien
+	) VALUES (
+		1,
+		'2021-01-02',
+		123000456
+	)
+	"""
+	# print("Đang thực thi câu lệnh thêm dữ liệu...")
+	insert_rs = crud_ops(
+		query=insert_query,
+		cluster_sessions=[cluster_sessions[1]],  # remote session
+		table_name='doanh_thu_moi_ngay_theo_ma_cn',
+		condition=None,
+		insert=True 
+	)
+	if not insert_rs:
+		print("Thao tác thêm dữ liệu thất bại!")
+	else:
+		print("Thao tác thêm dữ liệu thành công!")
+
+def operation_2_update(cluster_sessions):
+	"""Thao tác 2: Cập nhật dữ liệu"""
+	print("\n--- THAO TÁC CẬP NHẬT DỮ LIỆU ---")
+	update_query = f"""
+	UPDATE {keyspace_name}.chi_tiet_hoa_don_theo_ma_kh
+	SET so_luong = 15
+	WHERE ma_khach_hang = 4317 AND ngay_tao = '2023-07-17 13:01:23.000000+0000'
+		AND ma_hoa_don = 58495
+	;"""
+	# print("Đang thực thi câu lệnh cập nhật...")
+	update_rs = crud_ops(
+		update_query,
+		cluster_sessions,
+		'chi_tiet_hoa_don_theo_ma_kh',
+		"ma_khach_hang = 4317 AND ngay_tao = '2023-07-17 13:01:23.000000+0000' AND ma_hoa_don = 58495",
+		insert=False
+	)
+	if not update_rs:
+		print("Thao tác cập nhật thất bại!")
+	else:
+		print("Thao tác cập nhật thành công!")
+
+def operation_3_delete(cluster_sessions):
+	"""Thao tác 3: Xóa dữ liệu"""
+	print("\n--- THAO TÁC XÓA DỮ LIỆU ---")
+	del_query = f"""
+	DELETE 
+	FROM {keyspace_name}.chi_tiet_hoa_don_theo_ma_kh
+	WHERE ma_khach_hang = 4317 AND ngay_tao = '2023-07-17 13:01:23.000000+0000' AND ma_hoa_don = 58495
+	"""
+	# print("Đang thực thi câu lệnh xóa...")
+	del_rs = crud_ops(
+		del_query,
+		cluster_sessions,
+		'chi_tiet_hoa_don_theo_ma_kh',
+		"ma_khach_hang = 4317 AND ngay_tao = '2023-07-17 13:01:23.000000+0000' AND ma_hoa_don = 58495",
+		insert=False 
+	)
+	if not del_rs:
+		print("Thao tác xóa thất bại!")
+	else:
+		print("Thao tác xóa thành công!")
+
+def operation_4_select_partition(cluster_sessions):
+	"""Thao tác 4: Truy vấn theo Partition Key"""
+	print("\n--- TRUY VẤN THEO PARTITION KEY ---")
+	sel_part_query = f"""
+	SELECT * FROM chi_tiet_hoa_don_theo_ma_kh
+	WHERE ma_khach_hang = 1584;
+	"""
+	# print("Đang thực thi truy vấn theo partition key...")
+	sel_part_rs = select_ops(
+		sel_part_query,
+		cluster_sessions,
+		'chi_tiet_hoa_don_theo_ma_kh',
+		"ma_khach_hang = 1584"
+	)
+	if not sel_part_rs:
+		print("Truy vấn theo partition key thất bại!")
+	else:
+		print("Truy vấn theo partition key thành công!")
+
+def operation_5_select_partition_clustering(cluster_sessions):
+	"""Thao tác 5: Truy vấn theo Partition + Clustering Key"""
+	print("\n--- TRUY VẤN THEO PARTITION + CLUSTERING KEY ---")
+	sel_part_clus_query = f"""
+	SELECT * FROM sl_khach_hang_moi_ngay_theo_ma_cn
+	WHERE ma_chi_nhanh IN (1, 2) AND ngay = '2024-05-01';
+	"""
+	# print("Đang thực thi truy vấn theo partition + clustering key...")
+	sel_part_clus_rs = select_ops(
+		sel_part_clus_query,
+		cluster_sessions,
+		'sl_khach_hang_moi_ngay_theo_ma_cn',
+		"ma_chi_nhanh IN (1, 2) AND ngay = '2024-05-01'"
+	)
+	if not sel_part_clus_rs:
+		print("Truy vấn theo partition + clustering key thất bại!")
+	else:
+		print("Truy vấn theo partition + clustering key thành công!")
+
+def operation_6_select_range(cluster_sessions):
+	"""Thao tác 6: Truy vấn với Range trên Clustering Key"""
+	print("\n--- TRUY VẤN VỚI RANGE TRÊN CLUSTERING KEY ---")
+	sel_part_clus_query_1 = f"""
+	SELECT * FROM kho_sp_theo_ma_cn
+	WHERE ma_chi_nhanh = 2 AND ma_san_pham = 'CCNPLT0021' AND tong_so_luong_ton_kho >= 23 AND tong_so_luong_ton_kho <= 64;
+	"""
+	sel_part_clus_query_2 = f"""
+	SELECT * FROM kho_sp_theo_ma_cn
+	WHERE ma_chi_nhanh = 1 AND ma_san_pham = 'CCNPLT0021' AND tong_so_luong_ton_kho >= 23 AND tong_so_luong_ton_kho <= 64;
+	"""
+	# print("Đang thực thi truy vấn range trên cả hai cluster...")
+	sel_part_clus_union_rs = select_union_ops(
+		[sel_part_clus_query_1, sel_part_clus_query_2],
+		cluster_sessions
+	)
+	if not sel_part_clus_union_rs:
+		print("Truy vấn range thất bại!")
+	else:
+		print("Truy vấn range hoàn thành thành công!")
+
+def operation_7_allow_filtering(cluster_sessions):
+	"""Thao tác 7: Truy vấn với ALLOW FILTERING"""
+	print("\n--- TRUY VẤN VỚI ALLOW FILTERING ---")
+	print("Cảnh báo: ALLOW FILTERING không được khuyến khích sử dụng trong môi trường production!")
+	sel_allow_filter_query = f"""
+	SELECT * FROM chi_tiet_hoa_don_theo_ma_kh
+	WHERE phuong_thuc_thanh_toan= 'Tiền Mặt'
+	LIMIT 5
+	ALLOW FILTERING;
+	"""
+	# print("Đang thực thi truy vấn ALLOW FILTERING...")
+	sel_allow_filter_rs = select_ops(
+		sel_allow_filter_query,
+		cluster_sessions,
+		'chi_tiet_hoa_don_theo_ma_kh',
+		"phuong_thuc_thanh_toan= 'Tiền Mặt'"
+	)
+	if not sel_allow_filter_rs:
+		print("Truy vấn ALLOW FILTERING thất bại!")
+	else:
+		print("Truy vấn ALLOW FILTERING thành công!")
+
+def operation_8_secondary_index(cluster_sessions):
+	"""Thao tác 8: Truy vấn với Secondary Index"""
+	print("\n--- TRUY VẤN VỚI SECONDARY INDEX ---")
+	print("Cảnh báo: Secondary index có hạn chế trong Cassandra!")
+	
+	# Tạo index trước
+	create_index_query = """
+	CREATE INDEX IF NOT EXISTS ON doanh_thu_thang_nv_cn (tong_doanh_thu);
+	"""
+	try:
+		print("Đang tạo secondary index...")
+		for session in cluster_sessions:
+			session.execute(create_index_query)
+		print("Tạo index thành công!")
+	except Exception as e:
+		print(f"Lỗi tạo index (có thể đã tồn tại): {e}")
+	
+	# Thực thi truy vấn sử dụng index
+	index_query = """
+	SELECT * FROM doanh_thu_thang_nv_cn
+	WHERE tong_doanh_thu > 365000000
+	ALLOW FILTERING;
+	"""
+	# print("Đang thực thi truy vấn secondary index...")
+	sel_index_rs = select_ops(
+		index_query,
+		cluster_sessions,
+		'doanh_thu_thang_nv_cn',
+		'tong_doanh_thu > 365000000'
+	)
+	if not sel_index_rs:
+		print("Truy vấn secondary index thất bại!")
+	else:
+		print("Truy vấn secondary index thành công!")
+
+def main_menu():
+	try:
+		print("Đang kết nối đến Cassandra cluster...")
+		remote_cluster, remote_session = connect_to_cluster(cluster_ip, keyspace_name)
+		my_cluster, my_session = connect_to_cluster('127.0.0.1', keyspace_name)
+		
+		cluster_sessions = [my_session, remote_session]
+	  
+		operations = {
+			# 1: operation_1_insert,
+			# 2: operation_2_update,
+			# 3: operation_3_delete,
+			4: operation_4_select_partition,
+			5: operation_5_select_partition_clustering,
+			6: operation_6_select_range,
+			7: operation_7_allow_filtering,
+			8: operation_8_secondary_index
+		}
+		
+		while True:
+			display_menu()
+			choice = get_user_choice()
+			
+			if choice == 0:
+				print("\nĐang thoát ... Cảm ơn!")
+				break
+			elif choice in operations:
+				try:
+					operations[choice](cluster_sessions)
+				except Exception as e:
+					print(f"Lỗi khi thực thi thao tác: {e}")
+				
+				input("\nNhấn Enter để quay lại menu chính...")
+			else:
+				print("Lựa chọn không hợp lệ. Vui lòng thử lại.")
+	
+	except Exception as e:
+		print(f"Lỗi khi kết nối hoặc thực thi thao tác: {e}")
+	
+	finally:
+		if 'remote_cluster' in locals():
+			remote_cluster.shutdown()
+			print("Đã đóng kết nối cluster của Công Phan.")
+		if 'my_cluster' in locals():
+			my_cluster.shutdown()
+			print("Đã đóng kết nối cluster local.")
 
 if __name__ == "__main__":
-    crud_app = CassandraCRUD()
-    crud_app.run()
+	main_menu()

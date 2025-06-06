@@ -31,9 +31,9 @@ def crud_ops(query, cluster_sessions, table_name, condition, insert):
 			if tmp_check.one()[0] > 0:
 				cluster_sessions[i].execute(stm)
 				success = True 
-				print(f'Operation is executed successfully in session {i}!')
-			else:
-				print(f'No matching records found in session {i}')
+				# print(f'Operation is executed successfully in session {i}!')
+			# else:
+				# print(f'No matching records found in session {i}')
 	
 		except Exception as e:
 			print(f"Error executing on remote session: {e}")
@@ -75,7 +75,7 @@ def select_ops(query, cluster_sessions, table_name, condition):
 					all_rows.append(row_data)
 	 
 				success = True 
-				print(f'Operation is executed successfully in session {i}!')
+				# print(f'Operation is executed successfully in session {i}!')
 			else:
 				print(f'No matching records found in session {i}')
 	
@@ -114,8 +114,7 @@ def select_union_ops(queries, cluster_sessions):
 				all_rows.append(row_data)
  
 			success = True 
-			print(f'Operation is executed successfully in session {i}!')
-			
+			# print(f'Operation is executed successfully in session {i}!')
 	
 		except Exception as e:
 			print(f"Error executing on remote session: {e}")
@@ -130,159 +129,160 @@ def select_union_ops(queries, cluster_sessions):
 	
 	return True 
 
-try: 
-	remote_cluster, remote_session = connect_to_cluster(cluster_ip, keyspace_name)
-	my_cluster, my_session = connect_to_cluster('127.0.0.1', keyspace_name)
+# try: 
+# 	remote_cluster, remote_session = connect_to_cluster(cluster_ip, keyspace_name)
+# 	my_cluster, my_session = connect_to_cluster('127.0.0.1', keyspace_name)
 	
-	cluster_sessions = [
-		my_session,
-		remote_session
-	]
- 
-	print("\n==========Kiểm tra kết nối 2 máy thuộc 2 cluster==========")
+# 	cluster_sessions = [
+# 		my_session,
+# 		remote_session
+# 	]
 	
-	# insert 
-	# insert_query = f"""
-	# INSERT INTO doanh_thu_moi_ngay_theo_ma_cn (
-	# 	ma_chi_nhanh, 
-	# 	ngay,
-	# 	tong_tien
-	# ) VALUES (
-	# 	1,
-	# 	'2021-01-02',
-	# 	123000456
-	# )
- 	# """	
-	# insert_rs = crud_ops(
-	# 	query=insert_query,
-	# 	cluster_sessions=[remote_session],
-	# 	table_name='doanh_thu_moi_ngay_theo_ma_cn',
-	# 	condition=None,
-	# 	insert=True 
-	# )
-	# if not insert_rs:
-	# 	print("Executed failed!") 
+# 	# 1st operation: Thêm dữ liệu vào Máy 1 (Chi nhánh 1)
+# 	insert_query = f"""
+# 	INSERT INTO doanh_thu_moi_ngay_theo_ma_cn (
+# 		ma_chi_nhanh, 
+# 		ngay,
+# 		tong_tien
+# 	) VALUES (
+# 		1,
+# 		'2021-01-02',
+# 		123000456
+# 	)
+#  	"""	
+# 	insert_rs = crud_ops(
+# 		query=insert_query,
+# 		cluster_sessions=[remote_session],
+# 		table_name='doanh_thu_moi_ngay_theo_ma_cn',
+# 		condition=None,
+# 		insert=True 
+# 	)
+# 	if not insert_rs:
+# 		print("Executed failed!") 
   
-	# update
-	# update_query = f"""
-	# UPDATE {keyspace_name}.chi_tiet_hoa_don_theo_ma_kh
-	# SET so_luong = 15
-	# WHERE ma_khach_hang = 4317 AND ngay_tao = '2023-07-17 13:01:23.000000+0000'
-	# 	AND ma_hoa_don = 58495
-	# ;"""	
-	# update_rs = crud_ops(
-	# 	update_query,
-	# 	cluster_sessions,
-	# 	'chi_tiet_hoa_don_theo_ma_kh',
-	# 	"ma_khach_hang = 4317 AND ngay_tao = '2023-07-17 13:01:23.000000+0000' AND ma_hoa_don = 58495",
-	# 	insert=False
-	# )
-	# if not update_rs:
-	# 	print("Executed failed!")
+# 	# 2nd operation: update với dòng dữ liệu chỉ thuộc Máy 1 (Chi nhánh 1)
+# 	update_query = f"""
+# 	UPDATE {keyspace_name}.chi_tiet_hoa_don_theo_ma_kh
+# 	SET so_luong = 15
+# 	WHERE ma_khach_hang = 4317 AND ngay_tao = '2023-07-17 13:01:23.000000+0000'
+# 		AND ma_hoa_don = 58495
+# 	;"""	
+# 	update_rs = crud_ops(
+# 		update_query,
+# 		cluster_sessions,
+# 		'chi_tiet_hoa_don_theo_ma_kh',
+# 		"ma_khach_hang = 4317 AND ngay_tao = '2023-07-17 13:01:23.000000+0000' AND ma_hoa_don = 58495",
+# 		insert=False
+# 	)
+# 	if not update_rs:
+# 		print("Executed failed!")
  
-	# delete 
-	# del_query = f"""
-	# DELETE 
-	# FROM {keyspace_name}.chi_tiet_hoa_don_theo_ma_kh
-	# WHERE ma_khach_hang = 4317 AND ngay_tao = '2023-07-17 13:01:23.000000+0000' AND ma_hoa_don = 58495
-	# """
-	# del_rs = crud_ops(
-	# 	del_query,
-	# 	cluster_sessions,
-	# 	'chi_tiet_hoa_don_theo_ma_kh',
-	# 	"ma_khach_hang = 4317 AND ngay_tao = '2023-07-17 13:01:23.000000+0000' AND ma_hoa_don = 58495",
-	# 	insert=False 
-	# )
-	# if not del_rs:
-	# 	print("Executed failed!") 
+# 	# 3rd operation: xoá với dòng dữ liệu chỉ thuộc Máy 1 (Chi nhánh 1) 
+# 	del_query = f"""
+# 	DELETE 
+# 	FROM {keyspace_name}.chi_tiet_hoa_don_theo_ma_kh
+# 	WHERE ma_khach_hang = 4317 AND ngay_tao = '2023-07-17 13:01:23.000000+0000' AND ma_hoa_don = 58495
+# 	"""
+# 	del_rs = crud_ops(
+# 		del_query,
+# 		cluster_sessions,
+# 		'chi_tiet_hoa_don_theo_ma_kh',
+# 		"ma_khach_hang = 4317 AND ngay_tao = '2023-07-17 13:01:23.000000+0000' AND ma_hoa_don = 58495",
+# 		insert=False 
+# 	)
+# 	if not del_rs:
+# 		print("Executed failed!") 
 	
-	# select: partition key 
-	# sel_part_query = f"""
-	# SELECT * FROM chi_tiet_hoa_don_theo_ma_kh
-	# WHERE ma_khach_hang = 1584;
-	# """
-	# sel_part_rs = select_ops(
-	# 	sel_part_query,
-	# 	cluster_sessions,
-	# 	'chi_tiet_hoa_don_theo_ma_kh',
-	# 	"ma_khach_hang = 1584"
-	# )	
-	# if not sel_part_rs:
-	# 	print("Executed failed!")  
+# 	# 4th operation: truy vấn theo Partition key 
+# 	sel_part_query = f"""
+# 	SELECT * FROM chi_tiet_hoa_don_theo_ma_kh
+# 	WHERE ma_khach_hang = 1584;
+# 	"""
+# 	sel_part_rs = select_ops(
+# 		sel_part_query,
+# 		cluster_sessions,
+# 		'chi_tiet_hoa_don_theo_ma_kh',
+# 		"ma_khach_hang = 1584"
+# 	)	
+# 	if not sel_part_rs:
+# 		print("Executed failed!")  
 	
-	# sel_part_clus_query = f"""
-	# SELECT * FROM chi_tiet_hoa_don_theo_ma_cn
-	# WHERE ma_chi_nhanh IN (1, 2) AND ngay = '2024-05-01';	
-	# """
-	# sel_part_clus_rs = select_ops(
-	# 	sel_part_clus_query,
-	# 	cluster_sessions,
-	# 	'sl_khach_hang_moi_ngay_theo_ma_cn',
-	# 	"ma_chi_nhanh IN (1, 2) AND ngay = '2024-05-01'"
-	# )	
-	# if not sel_part_clus_rs:
-	# 	print("Executed failed!")
+# 	# 5th operation: Truy vấn theo partition key + clustering key
+# 	sel_part_clus_query = f"""
+# 	SELECT * FROM chi_tiet_hoa_don_theo_ma_cn
+# 	WHERE ma_chi_nhanh IN (1, 2) AND ngay = '2024-05-01';	
+# 	"""
+# 	sel_part_clus_rs = select_ops(
+# 		sel_part_clus_query,
+# 		cluster_sessions,
+# 		'sl_khach_hang_moi_ngay_theo_ma_cn',
+# 		"ma_chi_nhanh IN (1, 2) AND ngay = '2024-05-01'"
+# 	)	
+# 	if not sel_part_clus_rs:
+# 		print("Executed failed!")
 	
-	# sel_part_clus_query_1 = f"""
-	# SELECT * FROM kho_sp_theo_ma_cn
-	# WHERE ma_chi_nhanh = 2 AND ma_san_pham = 'CCNPLT0021' AND tong_so_luong_ton_kho >= 23 AND tong_so_luong_ton_kho <= 64;	
-	# """
-	# sel_part_clus_query_2 = f"""
-	# SELECT * FROM kho_sp_theo_ma_cn
-	# WHERE ma_chi_nhanh = 1 AND ma_san_pham = 'CCNPLT0021' AND tong_so_luong_ton_kho >= 23 AND tong_so_luong_ton_kho <= 64;	
-	# """
-	# sel_part_clus_union_rs = select_union_ops(
-	# 	[sel_part_clus_query_1, sel_part_clus_query_2],
-	# 	cluster_sessions
-	# )	
-	# if not sel_part_clus_union_rs:
-	# 	print("Executed failed!")
+# 	# 6th operation: Truy vấn theo partition key với range trên clustering key
+# 	sel_part_clus_query_1 = f"""
+# 	SELECT * FROM kho_sp_theo_ma_cn
+# 	WHERE ma_chi_nhanh = 2 AND ma_san_pham = 'CCNPLT0021' AND tong_so_luong_ton_kho >= 23 AND tong_so_luong_ton_kho <= 64;	
+# 	"""
+# 	sel_part_clus_query_2 = f"""
+# 	SELECT * FROM kho_sp_theo_ma_cn
+# 	WHERE ma_chi_nhanh = 1 AND ma_san_pham = 'CCNPLT0021' AND tong_so_luong_ton_kho >= 23 AND tong_so_luong_ton_kho <= 64;	
+# 	"""
+# 	sel_part_clus_union_rs = select_union_ops(
+# 		[sel_part_clus_query_1, sel_part_clus_query_2],
+# 		cluster_sessions
+# 	)	
+# 	if not sel_part_clus_union_rs:
+# 		print("Executed failed!")
 	
-	sel_allow_filter_query = f"""
-	SELECT * FROM chi_tiet_hoa_don_theo_ma_kh
-	WHERE phuong_thuc_thanh_toan= 'Tiền Mặt'
-	LIMIT 5
-	ALLOW FILTERING;
-	"""
-	# sel_allow_filter_rs = select_ops(
-	# 	sel_allow_filter_query,
-	# 	cluster_sessions,
-	# 	'chi_tiet_hoa_don_theo_ma_kh',
-	# 	"phuong_thuc_thanh_toan= 'Tiền Mặt'"
-	# )	
-	# if not sel_allow_filter_rs:
-	# 	print("Executed failed!")
+# 	# 7th operation: Truy vấn bằng ALLOW FILTERING (không khuyến khích)
+# 	sel_allow_filter_query = f"""
+# 	SELECT * FROM chi_tiet_hoa_don_theo_ma_kh
+# 	WHERE phuong_thuc_thanh_toan= 'Tiền Mặt'
+# 	LIMIT 5
+# 	ALLOW FILTERING;
+# 	"""
+# 	sel_allow_filter_rs = select_ops(
+# 		sel_allow_filter_query,
+# 		cluster_sessions,
+# 		'chi_tiet_hoa_don_theo_ma_kh',
+# 		"phuong_thuc_thanh_toan= 'Tiền Mặt'"
+# 	)	
+# 	if not sel_allow_filter_rs:
+# 		print("Executed failed!")
   
-	# Query with indexing 
-	create_index_query = """
-	CREATE INDEX IF NOT EXISTS ON doanh_thu_thang_nv_cn (tong_doanh_thu);
-	"""
-	try:
-		for session in cluster_sessions:
-			session.execute(create_index_query)
-		print("Index created successfully!")
-	except Exception as e:
-		print(f"Index creation error (might already exist): {e}")
+# 	# 8th operation: Truy vấn bằng Secondary Index (hạn chế dùng)
+# 	create_index_query = """
+# 	CREATE INDEX IF NOT EXISTS ON doanh_thu_thang_nv_cn (tong_doanh_thu);
+# 	"""
+# 	try:
+# 		for session in cluster_sessions:
+# 			session.execute(create_index_query)
+# 		print("Index created successfully!")
+# 	except Exception as e:
+# 		print(f"Index creation error (might already exist): {e}")
 	
-	index_query = """
-	SELECT * FROM doanh_thu_thang_nv_cn
-	WHERE tong_doanh_thu > 365000000
- 	ALLOW FILTERING;
- 	"""
-	sel_index_rs = select_ops(
-		index_query,
-		cluster_sessions,
-		'doanh_thu_thang_nv_cn',
-		'tong_doanh_thu > 365000000'
-	)
-	if not sel_index_rs:
-		print("Executed failed!")	
-  
-except Exception as e: 
-	print(f"Error when doing queries: {e}")
+# 	index_query = """
+# 	SELECT * FROM doanh_thu_thang_nv_cn
+# 	WHERE tong_doanh_thu > 365000000
+#  	ALLOW FILTERING;
+#  	"""
+# 	sel_index_rs = select_ops(
+# 		index_query,
+# 		cluster_sessions,
+# 		'doanh_thu_thang_nv_cn',
+# 		'tong_doanh_thu > 365000000'
+# 	)
+# 	if not sel_index_rs:
+# 		print("Executed failed!")	
+	
+# except Exception as e: 
+# 	print(f"Error when doing queries: {e}")
  
-finally:
-	if 'remote_cluster' in locals():
-		remote_cluster.shutdown()
-	if 'my_cluster' in locals():
-		my_cluster.shutdown()
+# finally:
+# 	if 'remote_cluster' in locals():
+# 		remote_cluster.shutdown()
+# 	if 'my_cluster' in locals():
+# 		my_cluster.shutdown()

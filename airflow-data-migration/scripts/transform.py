@@ -1,13 +1,16 @@
 import pandas as pd
 import traceback 
 
+def save_transformed_to_minio(df, df_name, source_info, dag_run_id='oracle_to_cassandra_migration'):
+	pass
+
 def transform_data(input_data, k_name, num_cols, str_cols, datetime_cols, cols_mapping):
 	try: 
 		if input_data is None or not isinstance(input_data, dict):
 			print("Invalid separated data received")
 			return {}
 		
-		transformed_df = {}
+		transformed_df = {}	
 		
 		if k_name in input_data:
 			tmp_df = pd.DataFrame(input_data[k_name].copy())

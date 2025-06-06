@@ -9,7 +9,7 @@ SELECT
   hd."TongTien",
   hd."NgayTao",
   hd."PhuongThucThanhToan",
-  hd."MaNhanVien"
+  hd."MaNhanVien"  
 FROM BTL1."ChiTietHoaDon" cthd 
   JOIN BTL1."HoaDon" hd ON cthd."MaHoaDon" = hd."MaHoaDon"
   RIGHT JOIN BTL1."KhachHang" kh ON HD."MaKhachHang" = KH."MaKhachHang"

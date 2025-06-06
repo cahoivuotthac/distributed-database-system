@@ -12,7 +12,8 @@ WITH REPLICATION = {
 
 USE BTL2_data;
 
--- Data model tables 
+-- Data model tables
+ 
 CREATE TABLE IF NOT EXISTS chi_tiet_hoa_don_theo_ma_kh (
     ma_khach_hang int,
     ma_hoa_don int,
