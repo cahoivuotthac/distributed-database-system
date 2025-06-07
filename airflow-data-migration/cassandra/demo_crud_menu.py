@@ -47,11 +47,14 @@ def operation_1_insert(cluster_sessions):
 		tong_tien
 	) VALUES (
 		1,
-		'2021-01-02',
+		'2021-01-04',
 		123000456
 	)
 	"""
 	# print("Đang thực thi câu lệnh thêm dữ liệu...")
+	print("Câu truy vấn:")
+	print(insert_query)
+ 
 	insert_rs = crud_ops(
 		query=insert_query,
 		cluster_sessions=[cluster_sessions[1]],  # remote session
@@ -74,6 +77,9 @@ def operation_2_update(cluster_sessions):
 		AND ma_hoa_don = 58495
 	;"""
 	# print("Đang thực thi câu lệnh cập nhật...")
+	print("Câu truy vấn:")
+	print(update_query)
+ 
 	update_rs = crud_ops(
 		update_query,
 		cluster_sessions,
@@ -95,6 +101,9 @@ def operation_3_delete(cluster_sessions):
 	WHERE ma_khach_hang = 4317 AND ngay_tao = '2023-07-17 13:01:23.000000+0000' AND ma_hoa_don = 58495
 	"""
 	# print("Đang thực thi câu lệnh xóa...")
+	print("Câu truy vấn:")
+	print(del_query)
+ 
 	del_rs = crud_ops(
 		del_query,
 		cluster_sessions,
@@ -115,6 +124,9 @@ def operation_4_select_partition(cluster_sessions):
 	WHERE ma_khach_hang = 1584;
 	"""
 	# print("Đang thực thi truy vấn theo partition key...")
+	print("Câu truy vấn:")
+	print(sel_part_query)
+ 
 	sel_part_rs = select_ops(
 		sel_part_query,
 		cluster_sessions,
@@ -129,18 +141,33 @@ def operation_4_select_partition(cluster_sessions):
 def operation_5_select_partition_clustering(cluster_sessions):
 	"""Thao tác 5: Truy vấn theo Partition + Clustering Key"""
 	print("\n--- TRUY VẤN THEO PARTITION + CLUSTERING KEY ---")
-	sel_part_clus_query = f"""
+	sel_part_clus_query_1 = f"""
 	SELECT * FROM sl_khach_hang_moi_ngay_theo_ma_cn
-	WHERE ma_chi_nhanh IN (1, 2) AND ngay = '2024-05-01';
+	WHERE ma_chi_nhanh = 1 AND ngay = '2024-05-01';
+	"""
+	sel_part_clus_query_2 = f"""
+	SELECT * FROM sl_khach_hang_moi_ngay_theo_ma_cn
+	WHERE ma_chi_nhanh = 2 AND ngay = '2024-05-01';
 	"""
 	# print("Đang thực thi truy vấn theo partition + clustering key...")
-	sel_part_clus_rs = select_ops(
-		sel_part_clus_query,
-		cluster_sessions,
-		'sl_khach_hang_moi_ngay_theo_ma_cn',
-		"ma_chi_nhanh IN (1, 2) AND ngay = '2024-05-01'"
-	)
-	if not sel_part_clus_rs:
+	print("Câu truy vấn:")
+	print(sel_part_clus_query_1)
+	print("Câu truy vấn:")
+	print(sel_part_clus_query_2)
+	
+	sel_part_clus_union_rs = select_union_ops(
+		[sel_part_clus_query_2, sel_part_clus_query_1],
+		cluster_sessions
+	) 
+ 
+	# sel_part_clus_rs = select_ops(
+	# 	sel_part_clus_query,
+	# 	cluster_sessions,
+	# 	'sl_khach_hang_moi_ngay_theo_ma_cn',
+	# 	"ma_chi_nhanh IN (1, 2) AND ngay = '2024-05-01'"
+	# )
+	
+	if not sel_part_clus_union_rs:
 		print("Truy vấn theo partition + clustering key thất bại!")
 	else:
 		print("Truy vấn theo partition + clustering key thành công!")
@@ -157,6 +184,12 @@ def operation_6_select_range(cluster_sessions):
 	WHERE ma_chi_nhanh = 1 AND ma_san_pham = 'CCNPLT0021' AND tong_so_luong_ton_kho >= 23 AND tong_so_luong_ton_kho <= 64;
 	"""
 	# print("Đang thực thi truy vấn range trên cả hai cluster...")
+	print("Câu truy vấn:")
+	print(sel_part_clus_query_1)
+ 
+	print("Câu truy vấn:")
+	print(sel_part_clus_query_2)
+ 
 	sel_part_clus_union_rs = select_union_ops(
 		[sel_part_clus_query_1, sel_part_clus_query_2],
 		cluster_sessions
@@ -177,6 +210,9 @@ def operation_7_allow_filtering(cluster_sessions):
 	ALLOW FILTERING;
 	"""
 	# print("Đang thực thi truy vấn ALLOW FILTERING...")
+	print("Câu truy vấn:")
+	print(sel_allow_filter_query)
+ 
 	sel_allow_filter_rs = select_ops(
 		sel_allow_filter_query,
 		cluster_sessions,
@@ -197,6 +233,9 @@ def operation_8_secondary_index(cluster_sessions):
 	create_index_query = """
 	CREATE INDEX IF NOT EXISTS ON doanh_thu_thang_nv_cn (tong_doanh_thu);
 	"""
+	print("Tạo secondary index mới:")
+	print(create_index_query)
+  
 	try:
 		print("Đang tạo secondary index...")
 		for session in cluster_sessions:
@@ -212,6 +251,9 @@ def operation_8_secondary_index(cluster_sessions):
 	ALLOW FILTERING;
 	"""
 	# print("Đang thực thi truy vấn secondary index...")
+	print("Câu truy vấn:")
+	print(index_query)
+ 
 	sel_index_rs = select_ops(
 		index_query,
 		cluster_sessions,
