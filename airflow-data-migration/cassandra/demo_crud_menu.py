@@ -14,9 +14,9 @@ def display_menu():
 	print("\n" + "="*70)
 	print("         MENU CÁC THAO TÁC CRUD TRÊN 2 CASSANDRA CLUSTER")
 	print("="*70)
-	# print("1. Insert dữ liệu vào Máy 1 (Chi nhánh 1)")
-	# print("2. Update với dòng dữ liệu chỉ thuộc Máy 1 (Chi nhánh 1)")
-	# print("3. Xoá với dòng dữ liệu chỉ thuộc Máy 1 (Chi nhánh 1)")
+	print("1. Insert dữ liệu vào Máy 1 (Chi nhánh 1)")
+	print("2. Update với dòng dữ liệu chỉ thuộc Máy 1 (Chi nhánh 1)")
+	print("3. Xoá với dòng dữ liệu chỉ thuộc Máy 1 (Chi nhánh 1)")
 	print("4. Truy vấn theo Partition Key")
 	print("5. Truy vấn theo Partition + Clustering Key")
 	print("6. Truy vấn theo partition key với range trên clustering key")
@@ -232,9 +232,9 @@ def main_menu():
 		cluster_sessions = [my_session, remote_session]
 	  
 		operations = {
-			# 1: operation_1_insert,
-			# 2: operation_2_update,
-			# 3: operation_3_delete,
+			1: operation_1_insert,
+			2: operation_2_update,
+			3: operation_3_delete,
 			4: operation_4_select_partition,
 			5: operation_5_select_partition_clustering,
 			6: operation_6_select_range,
