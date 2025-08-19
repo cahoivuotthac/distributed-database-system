@@ -1,95 +1,91 @@
+x-airflow-common: &airflow-common
+  build: .
+  environment: &airflow-common-env
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+    AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+    AIRFLOW_SCHEDULER_ENABLE_HEALTH_CHECK: "true"
+  volumes:
+    - ${AIRFLOW_PROJ_DIR-.}/dags:/opt/airflow/dags
+    - ${AIRFLOW_PROJ_DIR-.}/logs:/opt/airflow/logs
+    - ${AIRFLOW_PROJ_DIR-.}/plugins:/opt/airflow/plugins
+  user: "${AIRFLOW_UID:-50000}:0"
+  depends_on:
+    postgres:
+      condition: service_healthy
+    airflow-init:
+      condition: service_completed_successfully
+  networks:
+    - etl_network
+
 services:
-  postgres:
+  # Light-weight configuration for Airflow
+  postgres: # metadata database
     image: postgres:13
-    container_name: postgres 
+    container_name: postgres
     environment:
-      POSTGRES_USER: airflow
-      POSTGRES_PASSWORD: airflow 
-      POSTGRES_DB: airflow 
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     volumes:
-      - postgres_db:/var/lib/postgresql/data
+      - ${AIRFLOW_PROJ_DIR-.}/postgres_metadata_db:/var/lib/postgresql/data
     networks:
-      - etl_network 
+      - etl_network
+
+    # ensure service works properly before others connect to
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U airflow"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"] # CMD-SHELL means run command in container shell
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 30s
+      start_period: 30s # wait 30s before doing health checking
+    restart: always # always restart container whenever it stops
 
-  airflow-webserver: # provide Airflow web UI interface
-    build: . # use custom Dockerfile instead of image
+  airflow-init: # entrypoint helper container, run once and then stop
+    <<: *airflow-common
+    container_name: airflow-init
+    entrypoint: /bin/bash
+    restart: "no"
+    command:
+      - -c
+      - |
+        exec /entrypoint airflow db init && \
+        exec /entrypoint airflow users create \
+          --username ${_AIRFLOW_WWW_USER_USERNAME:-airflow} \
+          --password ${_AIRFLOW_WWW_USER_PASSWORD:-airflow} \
+          --firstname ${_AIRFLOW_WWW_USER_FIRSTNAME:-Airflow} \
+          --lastname ${_AIRFLOW_WWW_USER_LASTNAME:-User} \
+          --role Admin \
+          --email ${_AIRFLOW_WWW_USER_EMAIL:-airflow@example.com}
+
+  airflow-webserver: # web UI
+    <<: *airflow-common
     container_name: airflow-webserver
-    restart: always
-    environment:
-      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
-      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
-      - AIRFLOW__WEBSERVER__RBAC=True
-      - AIRFLOW__CORE__LOAD_EXAMPLES=False
-      - AIRFLOW_UID=50000
+    command: webserver
     ports:
       - "8080:8080"
-    volumes:
-      - ./dags:/opt/airflow/dags 
-      - ./scripts:/opt/airflow/scripts
-      - airflow_logs:/opt/airflow/logs
-      - airflow_plugins:/opt/airflow/plugins
-      - airflow_config:/opt/airflow/config
-    depends_on:
-      airflow-init:
-        condition: service_completed_successfully
-    networks:
-      - etl_network 
-    command: webserver
-
-  airflow-scheduler: # core Airflow component that schedules and triggers DAG runs
-    build: . 
-    container_name: airflow-scheduler
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
     restart: always
-    environment:
-      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
-      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
-      - AIRFLOW__CORE__LOAD_EXAMPLES=False
-      - AIRFLOW_UID=50000
-    volumes:
-      - ./dags:/opt/airflow/dags 
-      - ./scripts:/opt/airflow/scripts 
-      - airflow_logs:/opt/airflow/logs
-      - airflow_plugins:/opt/airflow/plugins
-      - airflow_config:/opt/airflow/config
-    depends_on:
-      airflow-init:
-        condition: service_completed_successfully
-    networks:
-      - etl_network 
-    command: scheduler
 
-  airflow-init: # run once and then stop 
-    build: . 
-    container_name: airflow-init 
-    restart: "no"
-    environment:
-      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
-      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
-      - AIRFLOW__CORE__LOAD_EXAMPLES=False
-      - AIRFLOW_UID=50000
-    volumes:
-      - ./dags:/opt/airflow/dags       
-      - ./scripts:/opt/airflow/scripts
-      - airflow_logs:/opt/airflow/logs
-      - airflow_plugins:/opt/airflow/plugins
-      - airflow_config:/opt/airflow/config
-    depends_on:
-      postgres:
-        condition: service_healthy
-    command: >
-      bash -c "
-        airflow db init &&
-        airflow users create --username admin --firstname Admin --lastname Admin --role Admin --email admin@example.com --password admin
-      "
-    networks:
-      - etl_network 
-    
+  airflow-scheduler: # core component that schedules and triggers DAG runs
+    <<: *airflow-common
+    container_name: airflow-scheduler
+    command: scheduler
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "airflow jobs check --job-type SchedulerJob --hostname $(hostname)",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
   cassandra:
     image: cassandra:4.1
     container_name: cassandra
@@ -103,46 +99,11 @@ services:
     volumes:
       - cassandra_db_test:/var/lib/cassandra
     networks:
-      - etl_network 
-
-  # MinIO Object Storage
-  # minio:
-  #   image: minio/minio:latest 
-  #   container_name: minio 
-  #   ports:
-  #     - "9001:9001"
-  #     - "9000:9000"
-  #   command: ["server", "/data", "--console-address", ":9001"]
-  #   volumes:
-  #     - minio_data:/data 
-  #   environment:
-  #     MINIO_ROOT_USER: minioadmin 
-  #     MINIO_ROOT_PASSWORD: minioadmin123
-  #   networks:
-  #     - etl_network
-
-  # # MinIO Client for initial setup 
-  # minio-client:
-  #   image: minio/mc:latest
-  #   container_name: minio-client 
-  #   depends_on:
-  #     - minio
-  #   entrypoint: >
-  #     /bin/sh -c " until (/usr/bin/mc config host add minio
-  #     http://minio:9000 minioadmin minioadmin123) do echo '...waiting...' && sleep 1;
-  #     done; /usr/bin/mc mb minio/warehouse; /usr/bin/mc policy set public
-  #     minio/warehouse; exit 0; "
-  #   networks:
-  #     - etl_network
+      - etl_network
 
 volumes:
-  cassandra_db_test: 
-  postgres_db: 
-  airflow_logs:
-  airflow_plugins:
-  airflow_config:
-  # minio_data: 
- 
+  cassandra_db_test:
+
 networks:
   etl_network:
-    driver: bridge 
+    driver: bridge
