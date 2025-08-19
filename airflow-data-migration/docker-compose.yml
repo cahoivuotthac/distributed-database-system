@@ -97,12 +97,31 @@ services:
       CASSANDRA_DC: "DC_2"
       CASSANDRA_RACK: "rack1"
     volumes:
-      - cassandra_db_test:/var/lib/cassandra
+      - cassandra_data:/var/lib/cassandra
     networks:
       - etl_network
 
+  # Oracle Database Free 23c 
+  oracle-db:
+    image: container-register.oracle.com/database/free:23.3.0.0
+    container_name: oracle-db
+    ports: 
+      - "1521:1521" # Oracle listener (connect db)
+    environment:
+      ORACLE_PASSWORD: ${ORACLE_PASSWORD}
+    volumes:
+      - oracle_data:/opt/oracle/oradata 
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep", "tnslsnr"] 
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    restart: always
+
 volumes:
-  cassandra_db_test:
+  cassandra_data:
+  oracle_data:
 
 networks:
   etl_network:
