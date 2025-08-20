@@ -2,3 +2,7 @@
 __pycache__/
 .vscode/
 airflow_sources/
+instantclient-sqlplus-linux.x64-23.9.0.25.07/
+instantclient-basic-linux.x64-23.9.0.25.07/
+
+oracle_connect_guide.md
