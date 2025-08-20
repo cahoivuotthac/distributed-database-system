@@ -8,6 +8,7 @@
   - Quan hệ CHINHANH là **phân mảnh ngang chính** theo địa chỉ
   - Quan hệ NHANVIEN, HOADON, CHITIETHOADON là **phân mảnh ngang dẫn xuất**
   - Quan hệ KHOSANPHAM được **phân mảnh hỗn hợp** thành các quan hệ  KHOSANPHAM_QLKHO và KHOSANPHAM_QLBANHANG
+  - Quan hệ KHACHHANG, SANPHAM, DANHMUC_SANPHAM, THUOCTINH_SANPHAM **được nhân bản tại tất cả các chi nhánh**
 
 - **BTL2**: CƠ CHẾ PHÂN TÁN TRONG HỆ QUẢN TRỊ CASSANDRA
   
