@@ -12,6 +12,7 @@
 
 - **BTL2**: CƠ CHẾ PHÂN TÁN TRONG HỆ QUẢN TRỊ CASSANDRA
   
-  <img width="664" height="318" alt="image" src="https://github.com/user-attachments/assets/23207284-1f9c-43b8-a870-ed9bf51b2c81" />
+  <img width="1128" height="434" alt="image" src="https://github.com/user-attachments/assets/c3f91257-0aff-420a-918d-69283d6aa2bb" />
+
   
-  > Implementing DQC - Data Quality Control 
+  > Data Quality as a first-class citizen 
