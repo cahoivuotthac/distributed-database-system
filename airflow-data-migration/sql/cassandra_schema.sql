@@ -6,14 +6,13 @@
 
 CREATE KEYSPACE IF NOT EXISTS BTL2_data
 WITH REPLICATION = {
-    'class': 'SimpleStrategy', -- data to be spread across the entire cluster 
-    'replication_factor': 1
+    'class': 'NetworkTopologyStrategy', 
+    'DC1': 3
 };
 
 USE BTL2_data;
 
--- Data model tables
- 
+-- Data modeling 
 CREATE TABLE IF NOT EXISTS chi_tiet_hoa_don_theo_ma_kh (
     ma_khach_hang int,
     ma_hoa_don int,

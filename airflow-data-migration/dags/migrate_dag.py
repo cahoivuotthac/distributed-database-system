@@ -19,22 +19,21 @@ from transform import transform_invoice_data, transform_revenue_branch_data, tra
 from setup_connections import setup_connections 
 
 default_args = {
-	'owner': 'hienfaang',
+	'owner': 'hienfaaaang',
 	'email_on_failure': True, 
 	'email_on_retry': False,
 	'email': 'thuyhienphanthi2004@gmail.com',
 	'retries': 3,
 	'retry_delay': timedelta(minutes=5),
-	'start_date': datetime(2025, 5, 28)
+	'start_date': datetime(2025, 8, 21)
 }
 
 dag = DAG(
 	dag_id='oracle_to_cassandra_migration',
 	default_args=default_args,
 	description='ETL pipeline from Oracle to Cassandra',
-	schedule_interval=None, 
-	catchup=False,
-    max_active_runs=1, # prevent multiple instances 
+	schedule_interval='@once', 
+    max_active_runs=1, # only 1 instance of DAG run at a time  
     concurrency=6, # allow 6 tasks run in parallel
 	tags=['migration', 'oracle', 'cassandra']
 )

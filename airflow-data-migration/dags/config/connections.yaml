@@ -2,8 +2,8 @@ connections:
   oracle_db:
     conn_id: oracle_BTL2
     conn_type: oracle
-    host: 26.93.36.133
-    schema: orcl
+    host: oracle-db
+    schema: DOAN_PHANTAN
     login: BTL1
     password: password
     port: 1521

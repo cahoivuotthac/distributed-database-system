@@ -1,8 +1,10 @@
 up:
-	docker-compose up -d 
+	docker compose up -d 
 down: 
-	docker-compose down  
+	docker compose down  
 restart:
-	make up && make down 
+	make down && make up
 build: 
-	docker-compose build
+	docker compose build
+build-up: 
+	docker compose up --build -d 

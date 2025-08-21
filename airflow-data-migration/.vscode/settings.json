@@ -1,3 +1,5 @@
 {
-	"python.analysis.extraPaths": ["./scripts"]
+	"python.analysis.extraPaths": ["./scripts"],
+	"python-envs.defaultEnvManager": "ms-python.python:system",
+	"python-envs.pythonProjects": []
 }

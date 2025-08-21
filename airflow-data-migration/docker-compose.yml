@@ -5,7 +5,7 @@ x-airflow-common: &airflow-common
   environment: 
     &airflow-common-env
       AIRFLOW__CORE__EXECUTOR: LocalExecutor # single-node
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres/${POSTGRES_DB}
       AIRFLOW__CORE__LOAD_EXAMPLES: "false"
       AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: "true"
       AIRFLOW__CORE__AUTH_MANAGER: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager 
@@ -136,16 +136,24 @@ services:
       _AIRFLOW_WWW_USER_CREATE: 'true'
       _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
       _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
-      _PIP_ADDITIONAL_REQUIREMENTS: ''
   
   airflow-apiserver: # web UI
     <<: *airflow-common
     container_name: airflow-webserver
     command: api-server 
+    environment:
+      <<: *airflow-common-env
+
+      # <conn_type>://<username>:<password>@<host>:<port>/<schema_or_keyspace>
+      # these are metadata stored in Postgres, so just need to define once in one Airflow service 
+      AIRFLOW_CONN_ORACLE: 'oracle://${ORACLE_USERNAME}:${ORACLE_PASSWORD}@oracle-db:1521/?service_name=${ORACLE_DATABASE}'
+      AIRFLOW_CONN_CASSANDRA: 'cassandra://cassandra:cassandra@cassandra-node1:9042/BTL2_data'
     depends_on:
       <<: *airflow-common-depends-on
       airflow-init:
         condition: service_completed_successfully
+      cassandra_data_1: 
+      oracle-db: 
     ports:
       - "8080:8080"
     healthcheck:
@@ -168,21 +176,61 @@ services:
       start_period: 30s
     restart: always 
 
-  cassandra:
+  cassandra-node1:
     image: cassandra:4.1
-    container_name: cassandra
+    container_name: cassandra-node1
+    hostname: cassandra-node1 # allow Cassandra nodes to gossip and replicate 
     ports:
       - "9042:9042"
     environment:
-      # Default single-node settings
       CASSANDRA_CLUSTER_NAME: "BTL2_cluster_2"
-      CASSANDRA_DC: "DC_2"
+      CASSANDRA_DC: "DC1"
       CASSANDRA_RACK: "rack1"
+      CASSANDRA_ENDPOINT_SNITCH: "GossipingPropertyFileSnitch"
+    
     volumes:
-      - cassandra_data:/var/lib/cassandra
+      - cassandra_data_1:/var/lib/cassandra
     networks:
       - etl_network
 
+  cassandra-node2:
+    image: cassandra:4.1
+    container_name: cassandra-node2
+    hostname: cassandra-node2 
+    ports:
+      - "9042:9042"
+    environment:
+      CASSANDRA_CLUSTER_NAME: "BTL2_cluster_2"
+      CASSANDRA_DC: "DC1"
+      CASSANDRA_RACK: "rack2"
+      CASSANDRA_ENDPOINT_SNITCH: "GossipingPropertyFileSnitch"
+      CASSANDRA_SEEDS: "cassandra-node1" 
+    depends_on:
+      - cassandra-node1 
+    volumes:
+      - cassandra_data_2:/var/lib/cassandra
+    networks:
+      - etl_network
+
+  cassandra-node3:
+    image: cassandra:4.1
+    container_name: cassandra-node3
+    hostname: cassandra-node3 
+    ports:
+      - "9042:9042"
+    environment:
+      CASSANDRA_CLUSTER_NAME: "BTL2_cluster_2"
+      CASSANDRA_DC: "DC1"
+      CASSANDRA_RACK: "rack3"
+      CASSANDRA_ENDPOINT_SNITCH: "GossipingPropertyFileSnitch"
+      CASSANDRA_SEEDS: "cassandra-node1" 
+    depends_on:
+      - cassandra-node1 
+    volumes:
+      - cassandra_data_3:/var/lib/cassandra
+    networks:
+      - etl_network
+   
   oracle-db:
     image: gvenzl/oracle-free:latest
     container_name: oracle-db
@@ -203,7 +251,9 @@ services:
     restart: always
 
 volumes:
-  cassandra_data:
+  cassandra_data_1:
+  cassandra_data_2:
+  cassandra_data_3:
   oracle_data:
 
 networks:

@@ -1,7 +1,10 @@
-.env
 __pycache__/
-.vscode/
+.env
+
+**/.**/
+
 airflow_sources/
+
 instantclient-sqlplus-linux.x64-23.9.0.25.07/
 instantclient-basic-linux.x64-23.9.0.25.07/
 

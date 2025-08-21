@@ -3,7 +3,6 @@ import pandas as pd
 import json
 from airflow.providers.oracle.hooks.oracle import OracleHook
 from airflow.configuration import conf
-from minio_manager import minio_manager
 
 # Enable pickle for XCom serialization
 # conf.set('core', 'enable_xcom_pickling', 'True')
@@ -15,33 +14,6 @@ def get_oracle_hook():
 		print(f"Error when getting oracle hook: {e}")
 
 oracle_hook = get_oracle_hook()
-
-def save_to_minio(df, df_name, source_info, dag_run_id='oracle_to_cassandra_migration'):
-	if not df.empty:
-		timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-		object_path = f"raw_data/invoice_data_{timestamp}.parquet"
-		
-		upload_result = minio_manager.upload_dataframe(
-			df=df,
-			object_path=object_path,
-			file_format="parquet",
-			metadata={
-				'extraction_time': timestamp,
-				'source_table': source_info,
-				'dag_run_id': dag_run_id,
-				'stage': 'extraction'
-			}
-		)
-  
-		return {
-			df_name: df,
-			'minio_info': upload_result
-		}
-	
-	return {
-		df_name: pd.DataFrame(),
-		'minio_info': None
-	}
 
 def execute_query(query):
 	try: 
@@ -87,13 +59,6 @@ def extract_invoice_data():
 	return {
         'invoice_data': df
     }
-	# return save_to_minio(
-    # 	df, 
-    #  	'invoice_data', 
-    #   	'ChiTietHoaDon, HoaDon, KhachHang'
-    # )
-    
-    
 
 def extract_revenue_branch_data():
 	if not oracle_hook:

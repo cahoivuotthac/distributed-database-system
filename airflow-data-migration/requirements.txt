@@ -1,3 +1,8 @@
 apache-airflow
 pandas
 cassandra-driver
+apache-airflow-providers-oracle
+apache-airflow-providers-apache-cassandra
+oracledb
+PyYAML
+tabulate

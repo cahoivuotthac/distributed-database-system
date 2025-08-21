@@ -4,7 +4,8 @@ from airflow import settings
 from airflow.models import Connection
 from airflow.utils.db import provide_session
 
-@provide_session
+# @provide_session provides SQLAlchemy db session to the decorated function 
+@provide_session 
 def create_connection(conn_id, conn_type, host, schema, login, password, port, session=None):
 	existing_conn = session.query(Connection).filter(Connection.conn_id == conn_id).first()
 	
@@ -31,7 +32,7 @@ def setup_connections():
 		config = yaml.safe_load(file)
 		
 	oracle_config = config['connections']['oracle_db']
-	cassandra_config = config['connections']['cassandra_db']
+	# cassandra_config = config['connections']['cassandra_db']
  
 	create_connection(
 		conn_id=oracle_config['conn_id'],
