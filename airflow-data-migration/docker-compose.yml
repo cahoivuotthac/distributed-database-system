@@ -35,7 +35,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
-      - ./${AIRFLOW_PROJ_DIR-.}/postgres_metadata_db:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     networks:
       - etl_network
 
@@ -258,14 +258,23 @@ services:
     volumes:
       - oracle_data:/opt/oracle/oradata
     healthcheck:
-      test: ["CMD-SHELL", "pgrep", "tnslsnr"]
+      test: ["CMD-SHELL", "/opt/oracle/product/23ai/dbhomeFree/bin/lsnrctl status | grep 'The command completed successfully'"]
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 40s
+      start_period: 60s
     restart: always
+    deploy:
+      resources:
+        # max resources Docker will try to reserve 
+        limits: 
+          memory: 4G 
+        # min resources
+        reservations: 
+          memory: 2G 
 
 volumes:
+  postgres_data:
   cassandra_data_1:
   cassandra_data_2:
   cassandra_data_3:
