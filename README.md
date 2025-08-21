@@ -11,7 +11,10 @@
   - Quan hệ KHACHHANG, SANPHAM, DANHMUC_SANPHAM, THUOCTINH_SANPHAM **được nhân bản tại tất cả các chi nhánh**
 
 - **BTL2**: CƠ CHẾ PHÂN TÁN TRONG HỆ QUẢN TRỊ CASSANDRA
+
+  1. Business requirements:
   
+  2. Data Flow Diagram: 
   <img width="1128" height="434" alt="image" src="https://github.com/user-attachments/assets/c3f91257-0aff-420a-918d-69283d6aa2bb" />
 
   
