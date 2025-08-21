@@ -31,5 +31,15 @@
 ### Data Flow Diagram
   <img width="1128" height="434" alt="image" src="https://github.com/user-attachments/assets/c3f91257-0aff-420a-918d-69283d6aa2bb" />
 
-  
-  > Data Quality as a first-class citizen 
+```
+┌─────────────┐    ┌──────────────┐    ┌─────────────┐
+│    RAM      │───▶│     DISK     │───▶│    RAM      │
+│             │    │              │    │             │
+│ Extract     │    │ .parquet     │    │ Transform   │
+│ DataFrame   │    │ file         │    │ DataFrame   │
+└─────────────┘    └──────────────┘    └─────────────┘
+      ▲                   │                    ▲                                     
+      │                   │                    │
+   Load data         Save to file         Read from file
+   from Oracle        (write to SSD)      (load to RAM)
+```
