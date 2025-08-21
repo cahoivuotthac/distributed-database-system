@@ -7,7 +7,7 @@
 CREATE KEYSPACE IF NOT EXISTS BTL2_data
 WITH REPLICATION = {
     'class': 'NetworkTopologyStrategy', 
-    'DC1': 3
+    'DC1': 3 -- data is replicated on 3 nodes in different racks which ensures fault tolerance
 };
 
 USE BTL2_data;
