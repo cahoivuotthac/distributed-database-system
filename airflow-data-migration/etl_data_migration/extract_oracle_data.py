@@ -4,18 +4,17 @@ import json
 from airflow.providers.oracle.hooks.oracle import OracleHook
 from airflow.configuration import conf
 
-# Enable pickle for XCom serialization
-# conf.set('core', 'enable_xcom_pickling', 'True')
 
 def get_oracle_hook():
 	try: 
-		return OracleHook(oracle_conn_id='oracle_BTL2')
+		return OracleHook(oracle_conn_id='oracle')
 	except Exception as e:
 		print(f"Error when getting oracle hook: {e}")
 
 oracle_hook = get_oracle_hook()
 
 def execute_query(query):
+
 	try: 
 		data = pd.read_sql(
 			query, 
@@ -25,18 +24,13 @@ def execute_query(query):
 		print(f"Successfully extracted {len(data)} rows from Oracle")
 		if len(data) > 0:
 			print(f"Columns: {data.columns.tolist()}")
-			print(f"Sample data: {data.head(2).to_dict('records')}")
-			
+		
 		return data
 	except Exception as e: 
 		print(f"Error extracting Oracle data: {e}")
 		return pd.DataFrame()
- 
+
 def extract_invoice_data():
-	if not oracle_hook:
-		print("Oracle hook not available for invoice data")
-		return pd.DataFrame()
-	
 	invoice_query = """
 		SELECT 
 			hd."MaKhachHang",
@@ -57,13 +51,10 @@ def extract_invoice_data():
 	print("Extracting invoice data...")
 	df = execute_query(invoice_query)
 	return {
-        'invoice_data': df
-    }
+		'invoice_data': df
+	}
 
 def extract_revenue_branch_data():
-	if not oracle_hook:
-		print("Oracle hook not available for revenue data")
-		return pd.DataFrame()
 	
 	revenue_query = """
 		SELECT 
@@ -83,17 +74,9 @@ def extract_revenue_branch_data():
 	return {
 		'revenue_branch_data': df
 	}
- 
-	# return save_to_minio(
-    # 	df, 
-    #  	'revenue_branch_data', 
-    #   	'HoaDon, NhanVien, ChiNhanh'
-    # )
+
 
 def extract_warehouse_data():
-	if not oracle_hook:
-		print("Oracle hook not available for warehouse data")
-		return pd.DataFrame()
 	
 	warehouse_query = """
 		SELECT 
@@ -117,17 +100,8 @@ def extract_warehouse_data():
 	return {
 		'warehouse_data': df
 	}
-	# return save_to_minio(
-    # 	df, 
-    #  	'warehouse_data', 
-    #   	'KhoSanPham_QLBanHang, Kho_SanPham_QLKho, SanPham'
-    # )
-
-def extract_customer_data():
-	if not oracle_hook:
-		print("Oracle hook not available for customer data")
-		return pd.DataFrame()
 	
+def extract_customer_data():
 	cus_query = """
 		SELECT 
 		  nv."MaChiNhanh",
@@ -144,17 +118,9 @@ def extract_customer_data():
 	return {
 		'customer_data': df
 	}
-	# return save_to_minio(
-    # 	df, 
-    #  	'customer_data', 
-    #   	'NhanVien, HoaDon'
-    # )
 	
 def extract_doanh_thu_sp_quy_cn():
-	if not oracle_hook:
-		print("Oracle hook not available for customer data")
-		return pd.DataFrame()
-	
+
 	cus_query = """
 		SELECT
 		  KQL."MaChiNhanh",
@@ -182,17 +148,9 @@ def extract_doanh_thu_sp_quy_cn():
 	return {
 		'doanh_thu_sp_quy_cn_data': df 
 	}
-	# return save_to_minio(
-    # 	df, 
-    #  	'doanh_thu_sp_quy_cn_data', 
-    #   	'ChiTietHoaDon, HoaDon, SanPham, NhanVien, ChiNhanh'
-    # )
- 
-def extract_doanh_thu_thang_nv_cn():
-	if not oracle_hook:
-		print("Oracle hook not available for customer data")
-		return pd.DataFrame()
 	
+def extract_doanh_thu_thang_nv_cn():
+
 	cus_query = """
 		SELECT
 		  NV."MaChiNhanh",
@@ -218,10 +176,6 @@ def extract_doanh_thu_thang_nv_cn():
 	return {
 		'doanh_thu_thang_nv_cn_data': df 
 	}
-	# return save_to_minio(
-    # 	df, 
-    #  	'doanh_thu_thang_nv_cn_data', 
-    #   	'ChiTietHoaDon, HoaDon, NhanVien'
-    # )
+
  
 	

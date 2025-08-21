@@ -141,9 +141,6 @@ services:
     <<: *airflow-common
     container_name: airflow-webserver
     command: api-server 
-    environment:
-      <<: *airflow-common-env
-
     depends_on:
       <<: *airflow-common-depends-on
       airflow-init:

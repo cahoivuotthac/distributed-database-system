@@ -11,7 +11,7 @@ done
 
 echo "Cassandra is available"
 
-if cqlsh cassandra-node1 -e "DESCRIBE KEYSPACE BTL2_data;" >/dev/null 2>&1; do 
+if cqlsh cassandra-node1 -e "DESCRIBE KEYSPACE BTL2_data;" >/dev/null 2>&1; then 
 	echo "Keyspace already exists. Skip init."
 else 
 	cqlsh cassandra-node1 -f /init.cql 

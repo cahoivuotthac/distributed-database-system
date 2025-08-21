@@ -1,8 +1,6 @@
--- Copy the SQL file to the container
--- docker cp sql\cassandra_schema.sql cassandra:/tmp/cassandra_schema.sql
-
--- Execute the script
--- docker exec -it cassandra cqlsh -f /tmp/cassandra_schema.sql
+-- docker compose exec cassandra-node1 cqlsh
+-- USE BTL2_data;
+-- DESCRIBE TABLES;
 
 CREATE KEYSPACE IF NOT EXISTS BTL2_data
 WITH REPLICATION = {
