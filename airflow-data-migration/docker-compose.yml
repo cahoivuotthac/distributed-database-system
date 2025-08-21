@@ -144,10 +144,6 @@ services:
     environment:
       <<: *airflow-common-env
 
-      # <conn_type>://<username>:<password>@<host>:<port>/<schema_or_keyspace>
-      # these are metadata stored in Postgres, so just need to define once in one Airflow service 
-      AIRFLOW_CONN_ORACLE: 'oracle://${ORACLE_USERNAME}:${ORACLE_PASSWORD}@oracle-db:1521/?service_name=${ORACLE_DATABASE}'
-      AIRFLOW_CONN_CASSANDRA: 'cassandra://cassandra:cassandra@cassandra-node1:9042/BTL2_data'
     depends_on:
       <<: *airflow-common-depends-on
       airflow-init:
