@@ -1,7 +1,7 @@
 **Tên môn học**: Cơ sở dữ liệu phân tán
 
 **Mã lớp**: IS211.P21
-## **BTL1** - THIẾT KẾ CƠ SỞ DỮ LIỆU PHÂN TÁN TRÊN HỆ QUẢN TRỊ CƠ SỞ DỮ LIỆU QUAN HỆ ORACLE
+## Project Title: Distributed Database Design on Oracle RDBMS
   
   <img width="1276" height="639" alt="image" src="https://github.com/user-attachments/assets/641cb496-50c4-4457-a98b-3877fd7e6bbc" />
 
@@ -25,7 +25,7 @@
   <img width="606" height="482" alt="image" src="https://github.com/user-attachments/assets/01ea0b15-6ef1-4404-a1dc-bb3e15689bf1" />
 
 
-## **BTL2**: CƠ CHẾ PHÂN TÁN TRONG HỆ QUẢN TRỊ CASSANDRA
+## Project Title: Distributed Database Design on NoSQL
 ### Business requirements
   
 ### Data Flow Diagram
