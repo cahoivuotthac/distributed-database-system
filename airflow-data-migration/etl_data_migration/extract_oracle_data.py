@@ -4,19 +4,16 @@ import json
 from airflow.providers.oracle.hooks.oracle import OracleHook
 from airflow.configuration import conf
 
-
 def get_oracle_hook():
 	try: 
 		return OracleHook(oracle_conn_id='oracle')
 	except Exception as e:
 		print(f"Error when getting oracle hook: {e}")
 
-oracle_hook = get_oracle_hook()
-
-def execute_query(query):
-
-	try: 
-		data = pd.read_sql(
+def execute_query(query, file_name):
+	try:
+		oracle_hook = get_oracle_hook()
+		data = pd.read_sql( # return DataFrame 
 			query, 
 			oracle_hook.get_conn() 
 		)
@@ -24,14 +21,18 @@ def execute_query(query):
 		print(f"Successfully extracted {len(data)} rows from Oracle")
 		if len(data) > 0:
 			print(f"Columns: {data.columns.tolist()}")
-		
-		return data
+
+		data.to_parquet(
+			file_name,
+			index=False
+		)
+
 	except Exception as e: 
 		print(f"Error extracting Oracle data: {e}")
-		return pd.DataFrame()
+		raise # stop the current workflow  
 
 def extract_invoice_data():
-	invoice_query = """
+	invoice_query = f"""
 		SELECT 
 			hd."MaKhachHang",
 			cthd."MaHoaDon",
@@ -42,39 +43,30 @@ def extract_invoice_data():
 			hd."NgayTao",
 			hd."PhuongThucThanhToan",
 			hd."MaNhanVien"
-		FROM "BTL1"."ChiTietHoaDon" cthd 
-			JOIN "BTL1"."HoaDon" hd ON cthd."MaHoaDon" = hd."MaHoaDon"
-			JOIN "BTL1"."KhachHang" kh ON hd."MaKhachHang" = kh."MaKhachHang"
+		FROM "DOAN_PHANTAN"."ChiTietHoaDon" cthd 
+			JOIN "DOAN_PHANTAN"."HoaDon" hd ON cthd."MaHoaDon" = hd."MaHoaDon"
+			JOIN "DOAN_PHANTAN"."KhachHang" kh ON hd."MaKhachHang" = kh."MaKhachHang"
 		ORDER BY cthd."MaHoaDon", hd."NgayTao" DESC
 	"""
 	
 	print("Extracting invoice data...")
-	df = execute_query(invoice_query)
-	return {
-		'invoice_data': df
-	}
+	df = execute_query(invoice_query, 'chi_tiet_hoa_don_theo_makh.parquet')
 
-def extract_revenue_branch_data():
-	
+def extract_revenue_branch_data():	
 	revenue_query = """
 		SELECT 
 			cn."MaChiNhanh",
 			TRUNC(hd."NgayTao") AS "Ngay",
 			SUM(hd."TongTien") AS "TongTien"
-		FROM "BTL1"."HoaDon" hd 
-			JOIN "BTL1"."NhanVien" nv ON hd."MaNhanVien" = nv."MaNhanVien"
-			JOIN "BTL1"."ChiNhanh" cn ON cn."MaChiNhanh" = nv."MaChiNhanh"
+		FROM "DOAN_PHANTAN"."HoaDon" hd 
+			JOIN "DOAN_PHANTAN"."NhanVien" nv ON hd."MaNhanVien" = nv."MaNhanVien"
+			JOIN "DOAN_PHANTAN"."ChiNhanh" cn ON cn."MaChiNhanh" = nv."MaChiNhanh"
 		GROUP BY cn."MaChiNhanh", TRUNC(hd."NgayTao")
 		ORDER BY TRUNC(hd."NgayTao") DESC
 	"""
 	
 	print("Extracting revenue data...")
-	df = execute_query(revenue_query)
-	
-	return {
-		'revenue_branch_data': df
-	}
-
+	df = execute_query(revenue_query, 'doanh_thu_moi_ngay_theo_macn.parquet')
 
 def extract_warehouse_data():
 	
@@ -87,37 +79,31 @@ def extract_warehouse_data():
 			kspqh."TongSoLuongDanhGia",
 			kspqh."TongSoLuongDaBan",
 			kspq."SoLuong"
-		FROM "BTL1"."KhoSanPham_QLBanHang" kspqh, 
-			 "BTL1"."KhoSanPham_QLKho" kspq, 
-			 "BTL1"."SanPham" sp
+		FROM "DOAN_PHANTAN"."KhoSanPham_QLBanHang" kspqh, 
+			 "DOAN_PHANTAN"."KhoSanPham_QLKho" kspq, 
+			 "DOAN_PHANTAN"."SanPham" sp
 		WHERE  kspqh."MaSanPham" = kspq."MaSanPham" 
 		  AND sp."MaSanPham" =  kspq."MaSanPham"
 		ORDER BY  kspq."MaSanPham",  kspq."SoLuong"
 	"""
 	
 	print("Extracting warehouse data...")
-	df = execute_query(warehouse_query)
-	return {
-		'warehouse_data': df
-	}
-	
+	df = execute_query(warehouse_query, 'kho_sp_theo_ma_cn.parquet')
+
 def extract_customer_data():
 	cus_query = """
 		SELECT 
 		  nv."MaChiNhanh",
 		  TRUNC(hd."NgayTao") AS Ngay,
 		  COUNT(DISTINCT hd."MaKhachHang") AS SoLuongKhachHang
-		FROM "BTL1"."NhanVien" nv
-		  JOIN "BTL1"."HoaDon" hd ON nv."MaNhanVien" = hd."MaNhanVien"
+		FROM "DOAN_PHANTAN"."NhanVien" nv
+		  JOIN "DOAN_PHANTAN"."HoaDon" hd ON nv."MaNhanVien" = hd."MaNhanVien"
 		GROUP BY nv."MaChiNhanh", TRUNC(hd."NgayTao")
 		ORDER BY Ngay DESC
 	"""
 	
 	print("Extracting customer data...")
-	df = execute_query(cus_query)
-	return {
-		'customer_data': df
-	}
+	df = execute_query(cus_query, 'sl_khach_hang_moi_ngay_theo_macn.parquet')
 	
 def extract_doanh_thu_sp_quy_cn():
 
@@ -144,10 +130,7 @@ def extract_doanh_thu_sp_quy_cn():
 	"""  
 	
 	print("Extracting doanh_thu_sp_quy_cn data...")
-	df = execute_query(cus_query)
-	return {
-		'doanh_thu_sp_quy_cn_data': df 
-	}
+	df = execute_query(cus_query, 'doanh_thu_sp_trong_quy_nam_theo_macn.parquet')
 	
 def extract_doanh_thu_thang_nv_cn():
 
@@ -170,12 +153,6 @@ def extract_doanh_thu_thang_nv_cn():
 		ORDER BY
 		  NV."MaChiNhanh", NV."MaNhanVien", Nam, Thang
 	"""  
-	
-	print("Extracting doanh_thu_thang_nv_cn data...")
-	df = execute_query(cus_query)
-	return {
-		'doanh_thu_thang_nv_cn_data': df 
-	}
 
- 
-	
+	print("Extracting doanh_thu_thang_nv_cn data...")
+	df = execute_query(cus_query, 'doanh_thu_nv_tung_thang_theo_macn.parquet')

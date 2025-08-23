@@ -20,3 +20,6 @@ docker exec airflow-webserver airflow connections add cassandra \
 ```
 <img src="https://github.com/user-attachments/assets/b93ec933-a54a-4ea5-827e-2e1e82011bb6" alt="image" width="800" height="480" />
 
+
+
+

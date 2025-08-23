@@ -1,4 +1,3 @@
--- For Cassandra's data model tables 
 -- chi_tiet_hoa_don_theo_ma_kh
 SELECT 
   hd."MaKhachHang",

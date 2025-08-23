@@ -25,7 +25,8 @@ default_args = {
 	'email': 'thuyhienphanthi2004@gmail.com',
 	'retries': 3,
 	'retry_delay': timedelta(minutes=5),
-	'start_date': datetime(2025, 8, 21)
+	'start_date': datetime(2025, 8, 21),
+    
 }
 
 dag = DAG(
